@@ -11,7 +11,7 @@ import zipfile
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, NoReturn
 from urllib.parse import unquote
 from xml.etree import ElementTree as ET
 
@@ -28,6 +28,8 @@ SLIDE_REL = f"{P_REL_NS}/slide"
 
 @dataclass(frozen=True)
 class SlideData:
+    """Text extracted from a single slide and its speaker notes."""
+
     number: int
     slide_path: str
     slide_text: str
@@ -35,6 +37,8 @@ class SlideData:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments for the PPTX-to-Markdown converter."""
+
     parser = argparse.ArgumentParser(
         prog="pptx-notes-md",
         description="Extract slide content and speaker notes from PPTX files to Markdown.",
@@ -46,20 +50,28 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def die(message: str) -> None:
+def die(message: str) -> NoReturn:
+    """Print a fatal CLI error and exit with a non-zero status."""
+
     print(f"ERROR: {message}", file=sys.stderr)
     raise SystemExit(1)
 
 
 def warn(message: str) -> None:
+    """Print a non-fatal CLI warning."""
+
     print(f"WARN: {message}", file=sys.stderr)
 
 
 def is_pptx(path: Path) -> bool:
+    """Return whether a path points to an existing PowerPoint file."""
+
     return path.is_file() and path.suffix.lower() == ".pptx"
 
 
 def iter_inputs(path: Path) -> list[Path]:
+    """Return PPTX inputs from a file path or recursively from a directory."""
+
     if path.is_dir():
         return sorted(p for p in path.rglob("*.pptx") if p.is_file())
     if path.exists():
@@ -68,11 +80,15 @@ def iter_inputs(path: Path) -> list[Path]:
 
 
 def part_rels_path(part_path: str) -> str:
+    """Return the package relationship path for a PPTX part path."""
+
     directory, filename = posixpath.split(part_path)
     return posixpath.join(directory, "_rels", f"{filename}.rels")
 
 
 def resolve_target(source_part: str, target: str) -> str:
+    """Resolve a relationship target relative to its source package part."""
+
     target = unquote(target)
     if target.startswith("/"):
         return target.lstrip("/")
@@ -81,6 +97,8 @@ def resolve_target(source_part: str, target: str) -> str:
 
 
 def read_xml(zf: zipfile.ZipFile, name: str) -> ET.Element | None:
+    """Read and parse an XML member from a PPTX archive, if it exists."""
+
     try:
         return ET.fromstring(zf.read(name))
     except KeyError:
@@ -90,6 +108,8 @@ def read_xml(zf: zipfile.ZipFile, name: str) -> ET.Element | None:
 
 
 def relationships(zf: zipfile.ZipFile, rels_path: str) -> dict[str, tuple[str, str]]:
+    """Return relationship IDs mapped to (type, target) pairs."""
+
     root = read_xml(zf, rels_path)
     if root is None:
         return {}
@@ -105,6 +125,8 @@ def relationships(zf: zipfile.ZipFile, rels_path: str) -> dict[str, tuple[str, s
 
 
 def slide_paths_in_order(zf: zipfile.ZipFile) -> list[str]:
+    """Return slide part paths in the order defined by the presentation."""
+
     presentation = read_xml(zf, "ppt/presentation.xml")
     if presentation is None:
         raise ValueError("ppt/presentation.xml not found")
@@ -122,6 +144,8 @@ def slide_paths_in_order(zf: zipfile.ZipFile) -> list[str]:
 
 
 def text_from_part(root: ET.Element | None) -> str:
+    """Extract normalized DrawingML paragraph text from a slide or notes part."""
+
     if root is None:
         return ""
 
@@ -140,6 +164,8 @@ def text_from_part(root: ET.Element | None) -> str:
 
 
 def normalize_text(text: str) -> str:
+    """Collapse repeated whitespace while preserving paragraph breaks."""
+
     lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
     compact: list[str] = []
     previous_blank = False
@@ -155,6 +181,8 @@ def normalize_text(text: str) -> str:
 
 
 def notes_path_for_slide(zf: zipfile.ZipFile, slide_path: str) -> str | None:
+    """Return the speaker-notes part path related to a slide, when present."""
+
     for rel_type, target in relationships(zf, part_rels_path(slide_path)).values():
         if rel_type == NOTES_REL:
             return resolve_target(slide_path, target)
@@ -162,6 +190,8 @@ def notes_path_for_slide(zf: zipfile.ZipFile, slide_path: str) -> str | None:
 
 
 def extract_deck(path: Path) -> list[SlideData]:
+    """Extract slide content and speaker notes from a PPTX deck."""
+
     if not is_pptx(path):
         raise ValueError("input is not a .pptx file")
 
@@ -179,6 +209,8 @@ def extract_deck(path: Path) -> list[SlideData]:
 
 
 def markdown_for_deck(path: Path, slides: Iterable[SlideData]) -> str:
+    """Render extracted slide data as Markdown."""
+
     out = [f"# {path.name}", ""]
     for slide in slides:
         out.extend(
@@ -199,6 +231,8 @@ def markdown_for_deck(path: Path, slides: Iterable[SlideData]) -> str:
 
 
 def timestamped_path(path: Path) -> Path:
+    """Return a non-existing timestamped variant of an output path."""
+
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     candidate = path.with_name(f"{path.stem}_{stamp}{path.suffix}")
     counter = 1
@@ -209,31 +243,37 @@ def timestamped_path(path: Path) -> Path:
 
 
 def output_path_for(input_path: Path, explicit: Path | None, force: bool) -> Path:
+    """Choose the Markdown output path for an input deck, timestamping if the path exists and force is not set."""
+
     output = explicit if explicit is not None else input_path.with_suffix(".md")
     if output.exists() and not force:
         return timestamped_path(output)
     return output
 
 
-def write_markdown(input_path: Path, markdown: str, output: Path, force: bool) -> Path:
+def write_markdown(input_path: Path, markdown: str, output: Path) -> Path:
+    """Write Markdown to the given path, creating parent directories as needed."""
+
     output.parent.mkdir(parents=True, exist_ok=True)
-    if output.exists() and not force:
-        output = timestamped_path(output)
     output.write_text(markdown, encoding="utf-8")
     return output
 
 
 def convert_file(input_path: Path, output: Path | None, force: bool, stdout: bool) -> Path | None:
+    """Convert one PPTX file to Markdown on disk or stdout."""
+
     slides = extract_deck(input_path)
     markdown = markdown_for_deck(input_path, slides)
     if stdout:
         print(markdown, end="")
         return None
     target = output_path_for(input_path, output, force)
-    return write_markdown(input_path, markdown, target, force=True)
+    return write_markdown(input_path, markdown, target)
 
 
 def main() -> int:
+    """Run the command-line converter."""
+
     args = parse_args()
     inputs = iter_inputs(args.input)
     folder_mode = args.input.is_dir()
