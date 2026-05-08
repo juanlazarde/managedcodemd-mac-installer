@@ -26,7 +26,7 @@ bash ~/.local/share/managedcodemd/create_automator.sh
 managedcodemd-convert path/to/document.pdf
 ```
 
-Done — `document.md` appears next to the source file. To convert via Finder instead, see [Finder Quick Action](#finder-quick-action).
+Done — Markdown is printed to your terminal. To save it: `managedcodemd-convert path/to/document.pdf > document.md`. To convert via Finder instead, see [Finder Quick Action](#finder-quick-action).
 
 ---
 
@@ -76,11 +76,11 @@ What it does, step by step:
 
 1. **Homebrew** — checks if installed; offers to run the official Homebrew installer if missing
 2. **.NET SDK** — checks version; upgrades to .NET 10 via Homebrew if needed
-3. **ExifTool** — optional; installs via Homebrew if confirmed
+3. **ExifTool** — optional; installed automatically via Homebrew if not already present
 4. **Repo** — clones this repo to `~/.local/share/managedcodemd` (or pulls latest if already cloned; validates git origin before touching)
 5. **Binary** — builds a self-contained native binary via `dotnet publish`
 6. **Symlinks** — creates `~/.local/bin/managedcodemd-convert` and `~/.local/bin/pptx-notes-md`
-7. **PATH** — adds `~/.local/bin` to your shell RC file (`~/.zshrc` or `~/.bash_profile`) if not already present
+7. **PATH** — adds `~/.local/bin` to your shell RC file (`~/.zshrc` or `~/.bashrc`) if not already present
 
 Then create the Quick Actions:
 
@@ -179,7 +179,7 @@ If a `.md` already exists, a timestamp suffix is added unless `--force` is passe
 
 ### `managedcodemd`
 
-Reserved for the original interactive wizard command. This installer does not replace it.
+Reserved for the original interactive wizard command. This installer does not install or replace it — see [ManagedCode MarkItDown](https://github.com/managedcode/markitdown) for setup.
 
 ---
 
@@ -194,7 +194,7 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-If you use bash, replace `~/.zshrc` with `~/.bash_profile`.
+If you use bash, replace `~/.zshrc` with `~/.bashrc`.
 
 ---
 
@@ -286,17 +286,13 @@ Then re-run `install.sh`.
 
 ### `dotnet publish` fails during install
 
-The SDK must be installed, not just the runtime. Confirm:
+The most common cause is the same as above — the SDK is missing. See [`dotnet publish` fails → .NET SDK not found](#net-sdk-not-found-during-install).
+
+To verify what's installed:
 
 ```bash
 dotnet --version   # must be 10.x.x
-dotnet sdk check   # shows installed SDKs
-```
-
-If only a runtime is listed, install the full SDK:
-
-```bash
-brew install --cask dotnet-sdk
+dotnet sdk check   # shows installed SDKs vs runtimes
 ```
 
 ---
@@ -349,7 +345,7 @@ rm -rf ~/Library/Services/Convert\ to\ .md\ with\ Managedcode.workflow.backup.*
 rm -rf ~/Library/Services/Convert\ to\ .md\ with\ Managedcode\ \(Text\ \&\ URLs\).workflow.backup.*
 ```
 
-To remove the PATH entry added by `install.sh`, open your shell RC file (`~/.zshrc` or `~/.bash_profile`) and delete the line:
+To remove the PATH entry added by `install.sh`, open your shell RC file (`~/.zshrc` or `~/.bashrc`) and delete the line:
 
 ```
 export PATH="$HOME/.local/bin:$PATH"
