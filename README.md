@@ -43,7 +43,7 @@ Done — Markdown is printed to your terminal. To save it: `managedcodemd-conver
 
 | Category  | Formats                                    |
 | --------- | ------------------------------------------ |
-| Documents | PDF, DOCX, PPTX, XLSX, RTF, ODT, ODS, ODP |
+| Documents | PDF, DOC, DOCX, PPTX, XLSX, RTF, ODT, ODS, ODP |
 | Web       | HTML, HTM                                  |
 | Images    | JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF, TIF |
 | Data      | CSV, JSON, XML                             |

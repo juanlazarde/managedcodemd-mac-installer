@@ -1,3 +1,8 @@
+using DocSharp.Binary.DocFileFormat;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.OpenXmlLib.WordprocessingML;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.WordprocessingMLMapping;
 using MarkItDown;
 using System.Text;
 
@@ -10,6 +15,7 @@ if (args.Length == 0 || args[0] is "-h" or "--help")
 
 var input = args[0];
 var client = new MarkItDownClient();
+var tempDocxDirectory = "";
 
 try
 {
@@ -33,7 +39,14 @@ try
             Console.Error.WriteLine($"File not found: {input}");
             return 1;
         }
-        result = await client.ConvertAsync(input);
+
+        var conversionInput = input;
+        if (Path.GetExtension(input).Equals(".doc", StringComparison.OrdinalIgnoreCase))
+        {
+            (conversionInput, tempDocxDirectory) = ConvertLegacyDocToDocx(input);
+        }
+
+        result = await client.ConvertAsync(conversionInput);
     }
 
     await using (result)
@@ -47,4 +60,36 @@ catch (Exception ex)
 {
     Console.Error.WriteLine($"Conversion failed: {ex.Message}");
     return 1;
+}
+finally
+{
+    if (!string.IsNullOrEmpty(tempDocxDirectory) && Directory.Exists(tempDocxDirectory))
+    {
+        try
+        {
+            Directory.Delete(tempDocxDirectory, recursive: true);
+        }
+        catch
+        {
+            // Do not fail an otherwise successful conversion because temp cleanup failed.
+        }
+    }
+}
+
+static (string DocxPath, string TempDirectory) ConvertLegacyDocToDocx(string input)
+{
+    var tempDirectory = Path.Combine(Path.GetTempPath(), $"managedcodemd-doc-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(tempDirectory);
+
+    var outputFileName = $"{Path.GetFileNameWithoutExtension(input)}.docx";
+    var outputPath = Path.Combine(tempDirectory, outputFileName);
+
+    using var storage = new StructuredStorageReader(input);
+    var document = new WordDocument(storage, 0);
+    using var docx = WordprocessingDocument.Create(outputPath, WordprocessingDocumentType.Document);
+
+    Converter.Convert(document, docx);
+    docx.Close();
+
+    return (outputPath, tempDirectory);
 }
