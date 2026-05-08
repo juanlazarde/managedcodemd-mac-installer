@@ -8,7 +8,7 @@ Install [ManagedCode MarkItDown](https://github.com/managedcode/markitdown) on m
 
 | Script                | Purpose                                                                                                      |
 | --------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `install.sh`          | Installs prerequisites, clones this installer repo, and builds the `managedcodemd-convert` direct conversion CLI                     |
+| `install.sh`          | Installs prerequisites, clones this installer repo, builds `managedcodemd-convert`, and installs `pptx-notes-md`                   |
 | `create_automator.sh` | Creates two macOS Quick Actions in `~/Library/Services/`, backing up existing workflows with the same names |
 
 ### Quick Actions installed
@@ -55,12 +55,23 @@ If Homebrew is missing, `install.sh` asks before running the official Homebrew i
 | ----------------------- | ----------------------------------------------------------------------- |
 | `managedcodemd`         | Reserved for the original wizard command; this installer does not replace it |
 | `managedcodemd-convert` | Direct non-interactive conversion command used by the Quick Actions     |
+| `pptx-notes-md`         | Extracts PPTX slide content and speaker notes to Markdown               |
 
 ```bash
 managedcodemd-convert document.pdf
 managedcodemd-convert https://example.com/page
 cat notes.txt | managedcodemd-convert -
+pptx-notes-md deck.pptx
+pptx-notes-md folder/
 ```
+
+### PowerPoint Speaker Notes
+
+`pptx-notes-md deck.pptx` writes `deck.md` next to the source file. If `deck.md` already exists, a timestamp suffix is added.
+
+`pptx-notes-md folder/` recursively processes every `.pptx` under the folder and writes each `.md` next to its source deck.
+
+Use `pptx-notes-md deck.pptx --stdout` to print Markdown instead of writing a file, or `pptx-notes-md deck.pptx -o notes.md` to choose an explicit output file.
 
 ### Finder (files & folders)
 
@@ -117,6 +128,9 @@ source ~/.zshrc
 **Conversion fails on a file**
 Check that the file type is in the supported list above. For unsupported types, `managedcodemd-convert` will skip the file and report it in the notification.
 
+**PPTX notes are missing from general conversion**
+Use `pptx-notes-md` for PowerPoint decks when speaker notes are required. MarkItDown-based PPTX conversion may not include the notes pane.
+
 **Installer refuses to use `~/.local/share/managedcodemd`**
 The installer only updates that path when it is the expected installer git clone. If the path contains other data, move it aside or remove it before running `install.sh`.
 
@@ -127,6 +141,7 @@ The installer only updates that path when it is the expected installer git clone
 ```bash
 # Remove CLI
 rm -f ~/.local/bin/managedcodemd-convert
+rm -f ~/.local/bin/pptx-notes-md
 rm -rf ~/.local/share/managedcodemd
 
 # Remove Quick Actions

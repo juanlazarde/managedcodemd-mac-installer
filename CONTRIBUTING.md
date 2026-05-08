@@ -13,7 +13,10 @@
 **`install.sh`**
 Run on a clean macOS environment or use a VM. Verify:
 - `managedcodemd-convert` binary exists at `~/.local/bin/managedcodemd-convert`
+- `pptx-notes-md` exists at `~/.local/bin/pptx-notes-md`
 - `managedcodemd-convert some-file.pdf` produces output
+- `pptx-notes-md some-file.pptx` creates `some-file.md`
+- `pptx-notes-md some-folder/` recursively processes PPTX files
 - `managedcodemd` is not overwritten by the installer
 - Existing non-git data at `~/.local/share/managedcodemd` is not deleted
 - Existing git clones with the wrong origin are rejected

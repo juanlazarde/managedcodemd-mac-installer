@@ -5,6 +5,7 @@ REPO_URL="https://github.com/juanlazarde/managedcodemd-mac-installer"
 INSTALL_DIR="$HOME/.local/share/managedcodemd"
 BIN_DIR="$HOME/.local/bin"
 BINARY="$BIN_DIR/managedcodemd-convert"
+PPTX_NOTES_BINARY="$BIN_DIR/pptx-notes-md"
 EXPECTED_EXE="managedcodemd-convert"
 EXPECTED_DLL="managedcodemd-convert.dll"
 
@@ -94,7 +95,6 @@ echo "==> Building CLI..."
 RUNTIME="osx-$(uname -m | sed 's/x86_64/x64/')"
 (
   cd "$INSTALL_DIR"
-  dotnet clean cli/managedcodemd.csproj --configuration Release --nologo -q 2>/dev/null || true
   dotnet publish cli/managedcodemd.csproj \
     --configuration Release \
     --runtime "$RUNTIME" \
@@ -125,6 +125,11 @@ EOF
   chmod +x "$BINARY"
 fi
 
+PPTX_NOTES_SCRIPT="$INSTALL_DIR/scripts/pptx_notes_md.py"
+[[ -f "$PPTX_NOTES_SCRIPT" ]] || die "Could not find expected script '$PPTX_NOTES_SCRIPT'."
+chmod +x "$PPTX_NOTES_SCRIPT"
+ln -sf "$PPTX_NOTES_SCRIPT" "$PPTX_NOTES_BINARY"
+
 # ── PATH hint ────────────────────────────────────────────────────────────────
 SHELL_RC=""
 case "$SHELL" in
@@ -149,8 +154,11 @@ fi
 echo ""
 echo "==> Installation complete!"
 echo "    Binary: $BINARY"
+echo "    PPTX notes: $PPTX_NOTES_BINARY"
 echo ""
 echo "Usage:"
 echo "    managedcodemd-convert <file-or-url>"
 echo "    managedcodemd-convert document.pdf"
 echo "    managedcodemd-convert https://example.com/page"
+echo "    pptx-notes-md deck.pptx"
+echo "    pptx-notes-md folder/"

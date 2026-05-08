@@ -25,6 +25,7 @@ What actually happened. Include any error output.
 - Ran `install.sh` first? yes / no
 - Existing `~/.local/share/managedcodemd` before install? yes / no / unsure
 - Existing Quick Actions before running `create_automator.sh`? yes / no / unsure
+- Command that failed (`managedcodemd-convert`, `pptx-notes-md`, or Quick Action):
 
 **Additional context**
 Any other relevant information.

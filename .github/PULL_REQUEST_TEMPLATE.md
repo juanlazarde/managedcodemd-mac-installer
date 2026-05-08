@@ -6,6 +6,7 @@
 
 - [ ] Tested `install.sh` on macOS
 - [ ] Tested `install.sh` does not overwrite an unexpected `~/.local/share/managedcodemd`
+- [ ] Tested `pptx-notes-md` on a PPTX file and a folder
 - [ ] Tested `create_automator.sh` — Quick Actions appear in Finder
 - [ ] Tested `create_automator.sh` — Services entry appears for selected text/URLs
 - [ ] Tested `create_automator.sh` backs up existing workflows before replacement
