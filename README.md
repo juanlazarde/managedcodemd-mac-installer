@@ -6,10 +6,10 @@ Install [ManagedCode MarkItDown](https://github.com/managedcode/markitdown) on m
 
 ## What it does
 
-| Script                | Purpose                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------ |
-| `install.sh`          | Installs prerequisites (Homebrew, .NET 9 SDK, ExifTool) and builds the `managedcodemd` CLI |
-| `create_automator.sh` | Creates two macOS Quick Actions in `~/Library/Services/`                                   |
+| Script                | Purpose                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `install.sh`          | Installs prerequisites, clones ManagedCode MarkItDown, and builds the `managedcodemd` CLI                    |
+| `create_automator.sh` | Creates two macOS Quick Actions in `~/Library/Services/`, backing up existing workflows with the same names |
 
 ### Quick Actions installed
 
@@ -20,15 +20,15 @@ Install [ManagedCode MarkItDown](https://github.com/managedcode/markitdown) on m
 
 ### Supported file types
 
-PDF, DOCX, XLSX, PPTX, HTML, JPG, PNG, GIF, WEBP, BMP, TIFF, CSV, JSON, XML, TXT, RTF, ODT, ODS, ODP, ZIP, WAV, MP3
+PDF, DOCX, XLSX, PPTX, HTML, HTM, JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF, TIF, CSV, JSON, XML, TXT, RTF, ODT, ODS, ODP, ZIP, WAV, MP3
 
 ---
 
 ## Requirements
 
 - macOS 12 Monterey or later
-- [Homebrew](https://brew.sh) (installed automatically if missing)
-- .NET 9 SDK (installed automatically if missing)
+- [Homebrew](https://brew.sh) (the installer can run the official Homebrew installer after confirmation)
+- .NET 9 SDK (installed with Homebrew if missing or older than major version 9)
 
 ---
 
@@ -43,6 +43,8 @@ bash create_automator.sh
 
 Run `install.sh` first — it builds the `managedcodemd` binary that `create_automator.sh` depends on.
 
+If Homebrew is missing, `install.sh` asks before running the official Homebrew installer. Existing data at `~/.local/share/markitdown` is not overwritten unless it is the expected ManagedCode MarkItDown git clone.
+
 ---
 
 ## Usage
@@ -54,7 +56,7 @@ Run `install.sh` first — it builds the `managedcodemd` binary that `create_aut
 3. A `.md` file appears next to each converted file
    - If a `.md` already exists, a timestamp suffix is added (e.g. `document_20260507_143022.md`)
    - Subfolders are recursed automatically
-   - Unsupported file types are skipped silently
+   - Unsupported file types are skipped and counted in the notification
 4. A macOS notification reports how many files were converted, failed, or skipped
 
 ### Text & URLs (any app)
@@ -76,12 +78,20 @@ bash install.sh
 
 The script pulls the latest source and rebuilds. Re-running `create_automator.sh` is only needed if workflow behaviour changes.
 
+Re-running `create_automator.sh` replaces the installed Quick Actions and moves any existing workflows with the same names to timestamped `.backup.YYYYMMDD_HHMMSS` directories.
+
 ---
 
 ## Troubleshooting
 
 **Quick Actions don't appear in the menu**
 Go to `System Settings → Keyboard → Keyboard Shortcuts → Services` and enable both **Convert to .md with Managedcode** entries.
+
+If they still do not appear, log out and back in, or run:
+
+```bash
+/System/Library/CoreServices/pbs -update
+```
 
 **`managedcodemd: command not found`**
 Add `~/.local/bin` to your PATH:
@@ -93,6 +103,9 @@ source ~/.zshrc
 
 **Conversion fails on a file**
 Check that the file type is in the supported list above. For unsupported types, `managedcodemd` will skip the file and report it in the notification.
+
+**Installer refuses to use `~/.local/share/markitdown`**
+The installer only updates that path when it is the expected ManagedCode MarkItDown git clone. If the path contains other data, move it aside or remove it before running `install.sh`.
 
 ---
 
@@ -106,6 +119,10 @@ rm -rf ~/.local/share/markitdown
 # Remove Quick Actions
 rm -rf ~/Library/Services/Convert\ to\ .md\ with\ Managedcode.workflow
 rm -rf ~/Library/Services/Convert\ to\ .md\ with\ Managedcode\ \(Text\ \&\ URLs\).workflow
+
+# Optional: remove workflow backups created by create_automator.sh
+rm -rf ~/Library/Services/Convert\ to\ .md\ with\ Managedcode.workflow.backup.*
+rm -rf ~/Library/Services/Convert\ to\ .md\ with\ Managedcode\ \(Text\ \&\ URLs\).workflow.backup.*
 ```
 
 ---

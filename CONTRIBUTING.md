@@ -14,11 +14,16 @@
 Run on a clean macOS environment or use a VM. Verify:
 - `managedcodemd` binary exists at `~/.local/bin/managedcodemd`
 - `managedcodemd some-file.pdf` produces output
+- Existing non-git data at `~/.local/share/markitdown` is not deleted
+- Existing git clones with the wrong origin are rejected
 
 **`create_automator.sh`**
 - Run the script and verify both `.workflow` bundles appear in `~/Library/Services/`
 - Right-click a supported file in Finder and confirm the Quick Action appears
 - Select text in any app and confirm the Services menu entry appears
+- Re-run the script and verify existing workflows are backed up with `.backup.YYYYMMDD_HHMMSS` suffixes
+- Validate generated workflow plists with `plutil -lint`
+- Confirm embedded workflow scripts pass `/bin/bash -n`
 
 ## Reporting bugs
 
@@ -26,6 +31,7 @@ Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md). Include:
 - macOS version
 - Output of `dotnet --version`
 - Full error output from the failing script
+- Whether an existing `~/.local/share/markitdown` or Quick Action workflow was present before running the script
 
 ## Suggesting features
 

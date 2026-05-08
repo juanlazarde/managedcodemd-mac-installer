@@ -5,13 +5,49 @@ REPO_URL="https://github.com/managedcode/markitdown"
 INSTALL_DIR="$HOME/.local/share/markitdown"
 BIN_DIR="$HOME/.local/bin"
 BINARY="$BIN_DIR/managedcodemd"
+EXPECTED_EXE="MarkItDown.Cli"
+EXPECTED_DLL="MarkItDown.Cli.dll"
 
 echo "==> Installing ManagedCode MarkItDown CLI"
 
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+confirm() {
+  local prompt="$1"
+  local reply
+
+  if [[ ! -t 0 ]]; then
+    return 1
+  fi
+
+  read -r -p "$prompt [y/N] " reply
+  [[ "$reply" == "y" || "$reply" == "Y" || "$reply" == "yes" || "$reply" == "YES" ]]
+}
+
+load_homebrew_env() {
+  if command -v brew &>/dev/null; then
+    return 0
+  fi
+
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+}
+
 # ── Homebrew ────────────────────────────────────────────────────────────────
+load_homebrew_env
 if ! command -v brew &>/dev/null; then
-  echo "==> Installing Homebrew..."
+  echo "==> Homebrew is required and was not found."
+  confirm "Install Homebrew by running the official installer from https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh?" \
+    || die "Homebrew is required. Install it from https://brew.sh and re-run this script."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  load_homebrew_env
+  command -v brew &>/dev/null || die "Homebrew installed but is not available on PATH."
 fi
 
 # ── .NET SDK ─────────────────────────────────────────────────────────────────
@@ -37,11 +73,19 @@ fi
 
 # ── Clone / update repo ───────────────────────────────────────────────────
 if [[ -d "$INSTALL_DIR/.git" ]]; then
+  ORIGIN_URL=$(git -C "$INSTALL_DIR" remote get-url origin 2>/dev/null || true)
+  [[ "$ORIGIN_URL" == "$REPO_URL" || "$ORIGIN_URL" == "$REPO_URL.git" ]] \
+    || die "$INSTALL_DIR is a git repository, but origin is '$ORIGIN_URL' instead of '$REPO_URL'."
+
   echo "==> Updating existing clone at $INSTALL_DIR..."
   git -C "$INSTALL_DIR" pull --ff-only
 else
+  if [[ -e "$INSTALL_DIR" ]]; then
+    die "$INSTALL_DIR already exists and is not a git clone. Move it aside or remove it before installing."
+  fi
+
   echo "==> Cloning $REPO_URL..."
-  rm -rf "$INSTALL_DIR"
+  mkdir -p "$(dirname "$INSTALL_DIR")"
   git clone --depth 1 "$REPO_URL" "$INSTALL_DIR"
 fi
 
@@ -64,17 +108,25 @@ RUNTIME="osx-$(uname -m | sed 's/x86_64/x64/')"
 # ── Wire up binary ───────────────────────────────────────────────────────────
 mkdir -p "$BIN_DIR"
 
-BUILT_BIN=$(find "$INSTALL_DIR/publish" -maxdepth 1 -type f -perm +111 | head -1)
-if [[ -z "$BUILT_BIN" ]]; then
+BUILT_BIN=""
+if [[ -x "$INSTALL_DIR/publish/$EXPECTED_EXE" ]]; then
+  BUILT_BIN="$INSTALL_DIR/publish/$EXPECTED_EXE"
+elif [[ -x "$INSTALL_DIR/publish/managedcodemd" ]]; then
+  BUILT_BIN="$INSTALL_DIR/publish/managedcodemd"
+fi
+
+if [[ -n "$BUILT_BIN" ]]; then
+  ln -sf "$BUILT_BIN" "$BINARY"
+else
   # Fall back to framework-dependent launcher
-  BUILT_BIN=$(find "$INSTALL_DIR/publish" -maxdepth 1 -name "*.dll" | head -1)
+  BUILT_DLL="$INSTALL_DIR/publish/$EXPECTED_DLL"
+  [[ -f "$BUILT_DLL" ]] || die "Could not find expected published binary '$EXPECTED_EXE' or '$EXPECTED_DLL'."
+
   cat > "$BINARY" <<EOF
 #!/usr/bin/env bash
-exec dotnet "$BUILT_BIN" "\$@"
+exec dotnet "$BUILT_DLL" "\$@"
 EOF
   chmod +x "$BINARY"
-else
-  ln -sf "$BUILT_BIN" "$BINARY"
 fi
 
 # ── PATH hint ────────────────────────────────────────────────────────────────
@@ -85,7 +137,7 @@ case "$SHELL" in
 esac
 
 PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
-if [[ -n "$SHELL_RC" ]] && ! grep -qF '.local/bin' "$SHELL_RC" 2>/dev/null; then
+if [[ -n "$SHELL_RC" ]] && ! grep -qxF "$PATH_LINE" "$SHELL_RC" 2>/dev/null; then
   echo "" >> "$SHELL_RC"
   echo "# Added by markitdown installer" >> "$SHELL_RC"
   echo "$PATH_LINE" >> "$SHELL_RC"

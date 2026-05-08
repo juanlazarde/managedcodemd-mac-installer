@@ -2,26 +2,27 @@
 set -euo pipefail
 
 # ── Config ────────────────────────────────────────────────────────────────────
-MANAGED_CMD="$HOME/.local/bin/managedcodemd"
-TEXT_URL_OUTPUT_DIR="$HOME/Downloads"
 MENU_LABEL="Convert to .md with Managedcode"
-
-SUPPORTED_EXTENSIONS=("pdf" "docx" "xlsx" "pptx" "html" "htm" "jpg" "jpeg" "png" "gif" "webp" "bmp" "tiff" "tif" "csv" "json" "xml" "txt" "md" "rtf" "odt" "ods" "odp" "zip" "wav" "mp3")
+WORKFLOW_MARKER="Created by managedcodemd-mac-installer"
 
 SERVICES_DIR="$HOME/Library/Services"
 FINDER_WORKFLOW="$SERVICES_DIR/${MENU_LABEL}.workflow"
 TEXT_WORKFLOW="$SERVICES_DIR/${MENU_LABEL} (Text & URLs).workflow"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-timestamp() { date +"%Y%m%d_%H%M%S"; }
+backup_existing_workflow() {
+  local wf="$1"
+  local backup
 
-ext_supported() {
-  local file_ext="${1##*.}"
-  file_ext="${file_ext,,}"
-  for e in "${SUPPORTED_EXTENSIONS[@]}"; do
-    [[ "$e" == "$file_ext" ]] && return 0
+  [[ -e "$wf" ]] || return 0
+
+  backup="${wf}.backup.$(date +"%Y%m%d_%H%M%S")"
+  while [[ -e "$backup" ]]; do
+    backup="${backup}.$$"
   done
-  return 1
+
+  mv "$wf" "$backup"
+  echo "==> Backed up existing workflow: $backup"
 }
 
 # ── Shared conversion logic (embedded in each workflow) ───────────────────────
@@ -38,7 +39,7 @@ SKIP=0
 
 ext_supported() {
   local file_ext="${1##*.}"
-  file_ext="${file_ext,,}"
+  file_ext=$(printf "%s" "$file_ext" | tr "[:upper:]" "[:lower:]")
   for e in "${SUPPORTED_EXTENSIONS[@]}"; do
     [[ "$e" == "$file_ext" ]] && return 0
   done
@@ -80,9 +81,15 @@ process_path() {
   fi
 }
 
-while IFS= read -r line; do
-  [[ -n "$line" ]] && process_path "$line"
-done
+if [[ $# -gt 0 ]]; then
+  for path in "$@"; do
+    [[ -n "$path" ]] && process_path "$path"
+  done
+else
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && process_path "$line"
+  done
+fi
 
 MSG=""
 [[ $SUCCESS -gt 0 ]] && MSG="${SUCCESS} file(s) converted."
@@ -106,8 +113,25 @@ INPUT="$(cat)"
 TS=$(date +"%Y%m%d_%H%M%S")
 OUTPUT="$OUTPUT_DIR/converted_${TS}.md"
 
-if echo "$INPUT" | "$MANAGED_CMD" - > "$OUTPUT" 2>/dev/null || \
-   "$MANAGED_CMD" "$INPUT" > "$OUTPUT" 2>/dev/null; then
+is_url() {
+  case "$1" in
+    http://*|https://*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+CONVERTED=0
+if is_url "$INPUT"; then
+  if "$MANAGED_CMD" "$INPUT" > "$OUTPUT" 2>/dev/null; then
+    CONVERTED=1
+  fi
+else
+  if printf "%s" "$INPUT" | "$MANAGED_CMD" - > "$OUTPUT" 2>/dev/null; then
+    CONVERTED=1
+  fi
+fi
+
+if [[ "$CONVERTED" -eq 1 && -s "$OUTPUT" ]]; then
   osascript -e "display notification \"Saved to Downloads/converted_${TS}.md\" with title \"Convert to .md with Managedcode\""
 else
   rm -f "$OUTPUT"
@@ -118,12 +142,13 @@ fi
 # ── Build Finder workflow (files & folders) ───────────────────────────────────
 build_finder_workflow() {
   local wf="$1"
-  rm -rf "$wf"
+  backup_existing_workflow "$wf"
   mkdir -p "$wf/Contents"
 
   cat > "$wf/Contents/document.wflow" <<WFLOW
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- $WORKFLOW_MARKER -->
 <plist version="1.0">
 <dict>
   <key>AMApplicationBuild</key>
@@ -259,12 +284,13 @@ WFLOW
 # ── Build Text/URL workflow ───────────────────────────────────────────────────
 build_text_workflow() {
   local wf="$1"
-  rm -rf "$wf"
+  backup_existing_workflow "$wf"
   mkdir -p "$wf/Contents"
 
   cat > "$wf/Contents/document.wflow" <<WFLOW
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- $WORKFLOW_MARKER -->
 <plist version="1.0">
 <dict>
   <key>AMApplicationBuild</key>
@@ -404,7 +430,6 @@ build_text_workflow "$TEXT_WORKFLOW"
 
 # Reload Services so macOS picks them up immediately
 /System/Library/CoreServices/pbs -update 2>/dev/null || true
-killall Finder 2>/dev/null || true
 
 echo ""
 echo "==> Done! Two Quick Actions installed:"
