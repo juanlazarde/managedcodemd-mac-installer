@@ -5,6 +5,7 @@ REPO_URL="https://github.com/juanlazarde/managedcodemd-mac-installer"
 INSTALL_DIR="$HOME/.local/share/managedcodemd"
 BIN_DIR="$HOME/.local/bin"
 BINARY="$BIN_DIR/managedcodemd-convert"
+WRAPPER="$BIN_DIR/managedcodemd-convert-wrapper"
 PPTX_NOTES_BINARY="$BIN_DIR/pptx-notes-md"
 EXPECTED_EXE="managedcodemd-convert"
 EXPECTED_DLL="managedcodemd-convert.dll"
@@ -112,7 +113,15 @@ if [[ -x "$INSTALL_DIR/publish/$EXPECTED_EXE" ]]; then
 fi
 
 if [[ -n "$BUILT_BIN" ]]; then
-  ln -sf "$BUILT_BIN" "$BINARY"
+  cat > "$WRAPPER" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+export DOTNET_BUNDLE_EXTRACT_BASE_DIR="\${TMPDIR:-/tmp}/managedcodemd-dotnet"
+mkdir -p "\$DOTNET_BUNDLE_EXTRACT_BASE_DIR"
+exec "$BUILT_BIN" "\$@"
+EOF
+  chmod +x "$WRAPPER"
+  ln -sf "$WRAPPER" "$BINARY"
 else
   # Fall back to framework-dependent launcher
   BUILT_DLL="$INSTALL_DIR/publish/$EXPECTED_DLL"
@@ -120,6 +129,9 @@ else
 
   cat > "$BINARY" <<EOF
 #!/usr/bin/env bash
+set -euo pipefail
+export DOTNET_BUNDLE_EXTRACT_BASE_DIR="\${TMPDIR:-/tmp}/managedcodemd-dotnet"
+mkdir -p "\$DOTNET_BUNDLE_EXTRACT_BASE_DIR"
 exec dotnet "$BUILT_DLL" "\$@"
 EOF
   chmod +x "$BINARY"

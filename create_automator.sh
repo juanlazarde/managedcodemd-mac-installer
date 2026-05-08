@@ -32,7 +32,9 @@ FINDER_SHELL_SCRIPT='#!/usr/bin/env bash
 set -euo pipefail
 
 MANAGED_CMD="$HOME/.local/bin/managedcodemd-convert"
-SUPPORTED_EXTENSIONS=(pdf docx xlsx pptx html htm jpg jpeg png gif webp bmp tiff tif csv json xml txt rtf odt ods odp zip wav mp3)
+export DOTNET_BUNDLE_EXTRACT_BASE_DIR="${TMPDIR:-/tmp}/managedcodemd-dotnet"
+mkdir -p "$DOTNET_BUNDLE_EXTRACT_BASE_DIR"
+SUPPORTED_EXTENSIONS=(pdf doc docx xlsx pptx html htm jpg jpeg png gif webp bmp tiff tif csv json xml txt rtf odt ods odp zip wav mp3)
 SUCCESS=0
 FAIL=0
 SKIP=0
@@ -104,6 +106,8 @@ TEXT_SHELL_SCRIPT='#!/usr/bin/env bash
 set -euo pipefail
 
 MANAGED_CMD="$HOME/.local/bin/managedcodemd-convert"
+export DOTNET_BUNDLE_EXTRACT_BASE_DIR="${TMPDIR:-/tmp}/managedcodemd-dotnet"
+mkdir -p "$DOTNET_BUNDLE_EXTRACT_BASE_DIR"
 OUTPUT_DIR="$HOME/Downloads"
 mkdir -p "$OUTPUT_DIR"
 
