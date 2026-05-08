@@ -23,7 +23,7 @@ What actually happened. Include any error output.
 - `dotnet --version`:
 - Shell (`echo $SHELL`):
 - Ran `install.sh` first? yes / no
-- Existing `~/.local/share/markitdown` before install? yes / no / unsure
+- Existing `~/.local/share/managedcodemd` before install? yes / no / unsure
 - Existing Quick Actions before running `create_automator.sh`? yes / no / unsure
 
 **Additional context**

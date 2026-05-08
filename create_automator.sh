@@ -31,7 +31,7 @@ backup_existing_workflow() {
 FINDER_SHELL_SCRIPT='#!/usr/bin/env bash
 set -euo pipefail
 
-MANAGED_CMD="$HOME/.local/bin/managedcodemd"
+MANAGED_CMD="$HOME/.local/bin/managedcodemd-convert"
 SUPPORTED_EXTENSIONS=(pdf docx xlsx pptx html htm jpg jpeg png gif webp bmp tiff tif csv json xml txt rtf odt ods odp zip wav mp3)
 SUCCESS=0
 FAIL=0
@@ -103,7 +103,7 @@ osascript -e "display notification \"$MSG\" with title \"Convert to .md with Man
 TEXT_SHELL_SCRIPT='#!/usr/bin/env bash
 set -euo pipefail
 
-MANAGED_CMD="$HOME/.local/bin/managedcodemd"
+MANAGED_CMD="$HOME/.local/bin/managedcodemd-convert"
 OUTPUT_DIR="$HOME/Downloads"
 mkdir -p "$OUTPUT_DIR"
 

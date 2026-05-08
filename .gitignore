@@ -2,3 +2,6 @@
 *.swp
 *.swo
 .claude
+test/
+bin/
+obj/

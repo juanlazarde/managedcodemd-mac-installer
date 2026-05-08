@@ -8,7 +8,7 @@ Install [ManagedCode MarkItDown](https://github.com/managedcode/markitdown) on m
 
 | Script                | Purpose                                                                                                      |
 | --------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `install.sh`          | Installs prerequisites, clones ManagedCode MarkItDown, and builds the `managedcodemd` CLI                    |
+| `install.sh`          | Installs prerequisites, clones this installer repo, and builds the `managedcodemd-convert` direct conversion CLI                     |
 | `create_automator.sh` | Creates two macOS Quick Actions in `~/Library/Services/`, backing up existing workflows with the same names |
 
 ### Quick Actions installed
@@ -28,7 +28,7 @@ PDF, DOCX, XLSX, PPTX, HTML, HTM, JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF, TIF, CSV
 
 - macOS 12 Monterey or later
 - [Homebrew](https://brew.sh) (the installer can run the official Homebrew installer after confirmation)
-- .NET 9 SDK (installed with Homebrew if missing or older than major version 9)
+- .NET 10 SDK (installed with Homebrew if missing or older than major version 10)
 
 ---
 
@@ -41,13 +41,26 @@ bash install.sh
 bash create_automator.sh
 ```
 
-Run `install.sh` first — it builds the `managedcodemd` binary that `create_automator.sh` depends on.
+Run `install.sh` first — it builds the `managedcodemd-convert` binary that `create_automator.sh` depends on.
 
-If Homebrew is missing, `install.sh` asks before running the official Homebrew installer. Existing data at `~/.local/share/markitdown` is not overwritten unless it is the expected ManagedCode MarkItDown git clone.
+If Homebrew is missing, `install.sh` asks before running the official Homebrew installer. Existing data at `~/.local/share/managedcodemd` is not overwritten unless it is the expected installer git clone.
 
 ---
 
 ## Usage
+
+### Commands
+
+| Command                 | Purpose                                                                 |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `managedcodemd`         | Reserved for the original wizard command; this installer does not replace it |
+| `managedcodemd-convert` | Direct non-interactive conversion command used by the Quick Actions     |
+
+```bash
+managedcodemd-convert document.pdf
+managedcodemd-convert https://example.com/page
+cat notes.txt | managedcodemd-convert -
+```
 
 ### Finder (files & folders)
 
@@ -93,7 +106,7 @@ If they still do not appear, log out and back in, or run:
 /System/Library/CoreServices/pbs -update
 ```
 
-**`managedcodemd: command not found`**
+**`managedcodemd-convert: command not found`**
 Add `~/.local/bin` to your PATH:
 
 ```bash
@@ -102,10 +115,10 @@ source ~/.zshrc
 ```
 
 **Conversion fails on a file**
-Check that the file type is in the supported list above. For unsupported types, `managedcodemd` will skip the file and report it in the notification.
+Check that the file type is in the supported list above. For unsupported types, `managedcodemd-convert` will skip the file and report it in the notification.
 
-**Installer refuses to use `~/.local/share/markitdown`**
-The installer only updates that path when it is the expected ManagedCode MarkItDown git clone. If the path contains other data, move it aside or remove it before running `install.sh`.
+**Installer refuses to use `~/.local/share/managedcodemd`**
+The installer only updates that path when it is the expected installer git clone. If the path contains other data, move it aside or remove it before running `install.sh`.
 
 ---
 
@@ -113,8 +126,8 @@ The installer only updates that path when it is the expected ManagedCode MarkItD
 
 ```bash
 # Remove CLI
-rm -f ~/.local/bin/managedcodemd
-rm -rf ~/.local/share/markitdown
+rm -f ~/.local/bin/managedcodemd-convert
+rm -rf ~/.local/share/managedcodemd
 
 # Remove Quick Actions
 rm -rf ~/Library/Services/Convert\ to\ .md\ with\ Managedcode.workflow

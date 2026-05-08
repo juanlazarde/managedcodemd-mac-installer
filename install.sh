@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="https://github.com/managedcode/markitdown"
-INSTALL_DIR="$HOME/.local/share/markitdown"
+REPO_URL="https://github.com/juanlazarde/managedcodemd-mac-installer"
+INSTALL_DIR="$HOME/.local/share/managedcodemd"
 BIN_DIR="$HOME/.local/bin"
-BINARY="$BIN_DIR/managedcodemd"
-EXPECTED_EXE="MarkItDown.Cli"
-EXPECTED_DLL="MarkItDown.Cli.dll"
+BINARY="$BIN_DIR/managedcodemd-convert"
+EXPECTED_EXE="managedcodemd-convert"
+EXPECTED_DLL="managedcodemd-convert.dll"
 
 echo "==> Installing ManagedCode MarkItDown CLI"
 
@@ -58,8 +58,8 @@ fi
 
 DOTNET_VER=$(dotnet --version 2>/dev/null || echo "0")
 DOTNET_MAJOR="${DOTNET_VER%%.*}"
-if [[ "$DOTNET_MAJOR" -lt 9 ]]; then
-  echo "==> Upgrading to .NET 9 SDK (found $DOTNET_VER)..."
+if [[ "$DOTNET_MAJOR" -lt 10 ]]; then
+  echo "==> Upgrading to .NET 10 SDK (found $DOTNET_VER)..."
   brew install --cask dotnet-sdk
 fi
 
@@ -75,13 +75,13 @@ fi
 if [[ -d "$INSTALL_DIR/.git" ]]; then
   ORIGIN_URL=$(git -C "$INSTALL_DIR" remote get-url origin 2>/dev/null || true)
   [[ "$ORIGIN_URL" == "$REPO_URL" || "$ORIGIN_URL" == "$REPO_URL.git" ]] \
-    || die "$INSTALL_DIR is a git repository, but origin is '$ORIGIN_URL' instead of '$REPO_URL'."
+    || die "$INSTALL_DIR exists but its origin is '$ORIGIN_URL' instead of '$REPO_URL'. Move it aside and re-run."
 
   echo "==> Updating existing clone at $INSTALL_DIR..."
   git -C "$INSTALL_DIR" pull --ff-only
 else
   if [[ -e "$INSTALL_DIR" ]]; then
-    die "$INSTALL_DIR already exists and is not a git clone. Move it aside or remove it before installing."
+    die "$INSTALL_DIR already exists and is not a git clone. Move it aside and re-run."
   fi
 
   echo "==> Cloning $REPO_URL..."
@@ -94,14 +94,12 @@ echo "==> Building CLI..."
 RUNTIME="osx-$(uname -m | sed 's/x86_64/x64/')"
 (
   cd "$INSTALL_DIR"
-  dotnet clean src/MarkItDown.Cli --configuration Release --nologo -q 2>/dev/null || true
-  dotnet publish src/MarkItDown.Cli \
+  dotnet clean cli/managedcodemd.csproj --configuration Release --nologo -q 2>/dev/null || true
+  dotnet publish cli/managedcodemd.csproj \
     --configuration Release \
     --runtime "$RUNTIME" \
     --self-contained true \
     --output "$INSTALL_DIR/publish" \
-    -p:PublishSingleFile=true \
-    -p:IncludeNativeLibrariesForSelfExtract=true \
     --nologo
 )
 
@@ -111,8 +109,6 @@ mkdir -p "$BIN_DIR"
 BUILT_BIN=""
 if [[ -x "$INSTALL_DIR/publish/$EXPECTED_EXE" ]]; then
   BUILT_BIN="$INSTALL_DIR/publish/$EXPECTED_EXE"
-elif [[ -x "$INSTALL_DIR/publish/managedcodemd" ]]; then
-  BUILT_BIN="$INSTALL_DIR/publish/managedcodemd"
 fi
 
 if [[ -n "$BUILT_BIN" ]]; then
@@ -155,6 +151,6 @@ echo "==> Installation complete!"
 echo "    Binary: $BINARY"
 echo ""
 echo "Usage:"
-echo "    managedcodemd <file-or-url>"
-echo "    managedcodemd document.pdf"
-echo "    managedcodemd https://example.com/page"
+echo "    managedcodemd-convert <file-or-url>"
+echo "    managedcodemd-convert document.pdf"
+echo "    managedcodemd-convert https://example.com/page"

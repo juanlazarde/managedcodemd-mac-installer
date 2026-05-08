@@ -12,9 +12,10 @@
 
 **`install.sh`**
 Run on a clean macOS environment or use a VM. Verify:
-- `managedcodemd` binary exists at `~/.local/bin/managedcodemd`
-- `managedcodemd some-file.pdf` produces output
-- Existing non-git data at `~/.local/share/markitdown` is not deleted
+- `managedcodemd-convert` binary exists at `~/.local/bin/managedcodemd-convert`
+- `managedcodemd-convert some-file.pdf` produces output
+- `managedcodemd` is not overwritten by the installer
+- Existing non-git data at `~/.local/share/managedcodemd` is not deleted
 - Existing git clones with the wrong origin are rejected
 
 **`create_automator.sh`**
@@ -31,7 +32,7 @@ Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md). Include:
 - macOS version
 - Output of `dotnet --version`
 - Full error output from the failing script
-- Whether an existing `~/.local/share/markitdown` or Quick Action workflow was present before running the script
+- Whether an existing `~/.local/share/managedcodemd` or Quick Action workflow was present before running the script
 
 ## Suggesting features
 

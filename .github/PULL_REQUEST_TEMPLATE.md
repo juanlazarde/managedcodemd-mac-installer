@@ -5,7 +5,7 @@
 ## Testing
 
 - [ ] Tested `install.sh` on macOS
-- [ ] Tested `install.sh` does not overwrite an unexpected `~/.local/share/markitdown`
+- [ ] Tested `install.sh` does not overwrite an unexpected `~/.local/share/managedcodemd`
 - [ ] Tested `create_automator.sh` — Quick Actions appear in Finder
 - [ ] Tested `create_automator.sh` — Services entry appears for selected text/URLs
 - [ ] Tested `create_automator.sh` backs up existing workflows before replacement
