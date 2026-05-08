@@ -25,6 +25,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - `pptx-notes-md` recursively converts PPTX files or folders to Markdown files containing slide content and speaker notes.
+- Legacy `.doc` (Word 97–2003) conversion via DocSharp — no LibreOffice required. Files are transparently pre-converted to `.docx` in a temp directory before being passed to MarkItDown.
 
 ## [1.0.0] - 2026-05-07
 

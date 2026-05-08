@@ -56,6 +56,7 @@ Sections in order, designed for top-to-bottom reading:
 **Intro paragraph (2–3 sentences):** Explains the two usage modes (Finder right-click + CLI), mentions 20+ supported formats, links to Quick Start.
 
 **Badges (shields.io):**
+
 - `[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)`
 - `[![Platform](https://img.shields.io/badge/platform-macOS%2012%2B-lightgrey?logo=apple)](https://apple.com/macos)`
 - `[![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/download)`
@@ -83,6 +84,7 @@ managedcodemd-convert path/to/file.pdf
 ## What It Does
 
 **Features list:**
+
 - Right-click any file or folder in Finder to convert to Markdown
 - Select text or a URL in any app and convert via the Services menu
 - CLI for scripting, piping, and batch processing
@@ -92,26 +94,26 @@ managedcodemd-convert path/to/file.pdf
 
 **Supported formats table:**
 
-| Category | Formats |
-|---|---|
+| Category  | Formats                                   |
+| --------- | ----------------------------------------- |
 | Documents | PDF, DOCX, PPTX, XLSX, RTF, ODT, ODS, ODP |
-| Web | HTML, HTM |
-| Images | JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF, TIF |
-| Data | CSV, JSON, XML |
-| Text | TXT |
-| Media | WAV, MP3 |
-| Archives | ZIP |
+| Web       | HTML, HTM                                 |
+| Images    | JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF, TIF |
+| Data      | CSV, JSON, XML                            |
+| Text      | TXT                                       |
+| Media     | WAV, MP3                                  |
+| Archives  | ZIP                                       |
 
 ---
 
 ## Prerequisites
 
-| Requirement | Version | Notes |
-|---|---|---|
-| macOS | 12 Monterey+ | Required for Quick Actions |
-| Homebrew | any | `install.sh` offers to install if missing |
-| .NET SDK | 10+ | Runtime alone is not enough |
-| ExifTool | any | Optional — improves image metadata |
+| Requirement | Version      | Notes                                     |
+| ----------- | ------------ | ----------------------------------------- |
+| macOS       | 12 Monterey+ | Required for Quick Actions                |
+| Homebrew    | any          | `install.sh` offers to install if missing |
+| .NET SDK    | 10+          | Runtime alone is not enough               |
+| ExifTool    | any          | Optional — improves image metadata        |
 
 Install links included for each.
 
@@ -120,6 +122,7 @@ Install links included for each.
 ## Installation
 
 Narrated walkthrough of what `install.sh` does at each step:
+
 1. Checks/installs Homebrew (with user confirmation)
 2. Checks/upgrades .NET SDK to version 10+
 3. Installs ExifTool (optional)
@@ -136,23 +139,25 @@ Organized by what the user wants to accomplish:
 
 ### Workflow Table
 
-| I want to… | Use |
-|---|---|
-| Convert files in Finder | Finder Quick Action |
+| I want to…                | Use                     |
+| ------------------------- | ----------------------- |
+| Convert files in Finder   | Finder Quick Action     |
 | Convert selected text/URL | Text & URL Quick Action |
-| Convert from terminal | `managedcodemd-convert` |
-| Extract PowerPoint notes | `pptx-notes-md` |
-| Use interactive wizard | `managedcodemd` |
+| Convert from terminal     | `managedcodemd-convert` |
+| Extract PowerPoint notes  | `pptx-notes-md`         |
+| Use interactive wizard    | `managedcodemd`         |
 
 ### Per-workflow content
 
 Each workflow gets:
+
 - One-line description
 - Exact invocation / how to trigger
 - Concrete example
 - Note on output location
 
 **`pptx-notes-md` gets extended coverage:**
+
 - Full flag reference: `-o`, `--stdout`, `--force`
 - Example: single file, directory batch, stdout pipe
 - Output format description (H1 filename → H2 slides → H3 content/notes)
@@ -193,6 +198,7 @@ Each workflow gets:
 ## Uninstall
 
 Checklist:
+
 1. Remove symlinks: `rm ~/.local/bin/managedcodemd-convert ~/.local/bin/pptx-notes-md`
 2. Remove repo: `rm -rf ~/.local/share/managedcodemd`
 3. Remove Quick Actions: `rm -rf ~/Library/Services/"Convert to .md with Managedcode.workflow"` (and Text variant)

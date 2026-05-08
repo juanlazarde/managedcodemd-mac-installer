@@ -15,7 +15,7 @@ if (args.Length == 0 || args[0] is "-h" or "--help")
 
 var input = args[0];
 var client = new MarkItDownClient();
-var tempDocxDirectory = "";
+string? tempDocxDirectory = null;
 
 try
 {
@@ -43,7 +43,9 @@ try
         var conversionInput = input;
         if (Path.GetExtension(input).Equals(".doc", StringComparison.OrdinalIgnoreCase))
         {
-            (conversionInput, tempDocxDirectory) = ConvertLegacyDocToDocx(input);
+            tempDocxDirectory = Path.Combine(Path.GetTempPath(), $"managedcodemd-doc-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDocxDirectory);
+            conversionInput = ConvertLegacyDocToDocx(input, tempDocxDirectory);
         }
 
         result = await client.ConvertAsync(conversionInput);
@@ -63,7 +65,7 @@ catch (Exception ex)
 }
 finally
 {
-    if (!string.IsNullOrEmpty(tempDocxDirectory) && Directory.Exists(tempDocxDirectory))
+    if (tempDocxDirectory != null && Directory.Exists(tempDocxDirectory))
     {
         try
         {
@@ -76,11 +78,8 @@ finally
     }
 }
 
-static (string DocxPath, string TempDirectory) ConvertLegacyDocToDocx(string input)
+static string ConvertLegacyDocToDocx(string input, string tempDirectory)
 {
-    var tempDirectory = Path.Combine(Path.GetTempPath(), $"managedcodemd-doc-{Guid.NewGuid():N}");
-    Directory.CreateDirectory(tempDirectory);
-
     var outputFileName = $"{Path.GetFileNameWithoutExtension(input)}.docx";
     var outputPath = Path.Combine(tempDirectory, outputFileName);
 
@@ -89,7 +88,6 @@ static (string DocxPath, string TempDirectory) ConvertLegacyDocToDocx(string inp
     using var docx = WordprocessingDocument.Create(outputPath, WordprocessingDocumentType.Document);
 
     Converter.Convert(document, docx);
-    docx.Close();
 
-    return (outputPath, tempDirectory);
+    return outputPath;
 }
