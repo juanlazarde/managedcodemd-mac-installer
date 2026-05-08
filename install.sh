@@ -47,15 +47,19 @@ fi
 
 # ── Build CLI ────────────────────────────────────────────────────────────────
 echo "==> Building CLI..."
-dotnet publish "$INSTALL_DIR/src/MarkItDown.Cli" \
-  --configuration Release \
-  --runtime osx-$(uname -m | sed 's/arm64/arm64/;s/x86_64/x64/') \
-  --self-contained true \
-  --output "$INSTALL_DIR/publish" \
-  -p:PublishSingleFile=true \
-  -p:IncludeNativeLibrariesForSelfExtract=true \
-  --nologo \
-  -q
+RUNTIME="osx-$(uname -m | sed 's/x86_64/x64/')"
+(
+  cd "$INSTALL_DIR"
+  dotnet clean src/MarkItDown.Cli --configuration Release --nologo -q 2>/dev/null || true
+  dotnet publish src/MarkItDown.Cli \
+    --configuration Release \
+    --runtime "$RUNTIME" \
+    --self-contained true \
+    --output "$INSTALL_DIR/publish" \
+    -p:PublishSingleFile=true \
+    -p:IncludeNativeLibrariesForSelfExtract=true \
+    --nologo
+)
 
 # ── Wire up binary ───────────────────────────────────────────────────────────
 mkdir -p "$BIN_DIR"
